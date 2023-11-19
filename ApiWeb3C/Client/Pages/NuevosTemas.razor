@@ -1,0 +1,58 @@
+﻿@page "/clasificacion/nueva"
+@page "/clasificacion/editar/{Id:int}"
+@inject HttpClient _http;
+@inject NavigationManager _navegador;
+
+<h3>@letrero Temas de Juegos</h3>
+
+<EditForm Model="laclasificacion" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+    <div class="mb-3 row">
+        <label for="txtNombre" class="col-sm-2 col-form-label">Nombre</label>
+        <div class="col-sm-10">
+            <InputText id="txtNombre" class="form-control" @bind-Value="laclasificacion.Nombre" />
+            <ValidationMessage For="()=>laclasificacion.Nombre" />
+        </div>
+    </div>
+    <button class="btn btn-success" type="submit">Guardar</button>
+    <button class="btn btn-danger" @onclick="Cancelar">Cancelar</button>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    private Clasificacion laclasificacion = new();
+    private string letrero = "Nueva";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id == 0)
+        {
+            letrero = "Nueva";
+            laclasificacion = new();
+        }
+        else
+        {
+            letrero = "Modificar";
+            laclasificacion = await _http.GetFromJsonAsync<Clasificacion>($"api/clasificaciones/{Id}");
+        }
+    }
+
+    private async void Guardar()
+    {
+        if (Id == 0)
+        {
+            await _http.PostAsJsonAsync<Clasificacion>("api/clasificaciones", laclasificacion);
+        }
+        else
+        {
+            await _http.PutAsJsonAsync<Clasificacion>($"api/clasificaciones/{Id}", laclasificacion);
+        }
+        _navegador.NavigateTo("/clasificaciones");
+    }
+
+    private void Cancelar()
+    {
+        _navegador.NavigateTo("/clasificaciones");
+    }
+}
